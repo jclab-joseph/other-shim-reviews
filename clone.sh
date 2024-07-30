@@ -40,6 +40,18 @@ printf "CLONE URL: ${REPO_URL}\n\n" | tee -a ${README_MD_FILE}
 printf "CLONE TAG: ${TAG_NAME}\n\n" | tee -a ${README_MD_FILE}
 printf "COMMIT ID: $(cd "${CLONE_DIR}" && git rev-parse HEAD)\n\n" | tee -a ${README_MD_FILE}
 
+printf "## PRE-BUILT SHIM FILES\n\n" | tee -a ${README_MD_FILE}
+
+printf '```\n' | tee -a ${README_MD_FILE}
+(cd ${CLONE_DIR} && sha256sum $(find . -type f -name "shim*.efi")) | tee -a ${README_MD_FILE}
+printf '\n```\n\n' | tee -a ${README_MD_FILE}
+
+printf "## VENDOR CERTIFICATE\n\n" | tee -a ${README_MD_FILE}
+
+printf '```\n' | tee -a ${README_MD_FILE}
+(cd ${CLONE_DIR} && find -type f -name "*.der" | while read name; do printf "$name: \n\n"; openssl x509 -inform der -in $name -noout -text; echo ""; done) | tee -a ${README_MD_FILE}
+printf '\n```\n' | tee -a ${README_MD_FILE}
+
 mkdir -p ${CLONE_DIR}/patches/
 
 echo "Try auto build..."
