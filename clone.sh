@@ -36,8 +36,9 @@ echo "REVIEW_DIR : ${REVIEW_DIR}"
 README_MD_FILE=${REVIEW_DIR}/README.md
 
 printf "## CLONE REVIEW REPOSITORY\n\n" > ${README_MD_FILE}
-printf "CLONE URL: ${REPO_URL}\n\n" >> ${README_MD_FILE}
-printf "CLONE TAG: ${TAG_NAME}\n\n" >> ${README_MD_FILE}
+printf "CLONE URL: ${REPO_URL}\n\n" | tee -a ${README_MD_FILE}
+printf "CLONE TAG: ${TAG_NAME}\n\n" | tee -a ${README_MD_FILE}
+printf "COMMIT ID: $(cd "${CLONE_DIR}" && git rev-parse HEAD)\n\n" | tee -a ${README_MD_FILE}
 
 mkdir -p ${CLONE_DIR}/patches/
 
