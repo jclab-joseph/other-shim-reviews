@@ -27,15 +27,34 @@ docker buildx build --no-cache --output "type=local,dest=${OUT_DIR}" -f ${CLONE_
 echo "BUILD SUCCESS!!!"
 echo "OUT_DIR: ${OUT_DIR}"
 
-printf "\n### DOCKER BUILD RESULT\n\n" >> ${README_MD_FILE}
+printf "\n## DOCKER BUILD RESULT\n\n" >> ${README_MD_FILE}
 
 printf "BUILD LOG: [01-build_log.txt](./01-build_log.txt)\n\n" >> ${README_MD_FILE}
 
-printf "#### OUTPUT FILES\n\n" >> ${README_MD_FILE}
+printf "### OUTPUT FILES\n\n" >> ${README_MD_FILE}
+
+SHIM_EFI_FILES=$(cd ${OUT_DIR} && find . -type f -name "shim*.efi")
 
 printf '```\n' >> ${README_MD_FILE}
-(cd ${OUT_DIR} && find . -type f -name "shim*.efi" | sha256sum >> ${README_MD_FILE})
+(cd ${OUT_DIR} && sha256sum ${SHIM_EFI_FILES}) >> ${README_MD_FILE}
 printf '\n```\n' >> ${README_MD_FILE}
+
+for name in ${SHIM_EFI_FILES}; do
+	printf "#### ${name}\n\n" >> ${README_MD_FILE}
+	
+	printf '**HASH**:\n```\n' >> ${README_MD_FILE}
+	(cd ${OUT_DIR} && sha256sum "${name}") >> ${README_MD_FILE}
+	printf '\n```\n\n' >> ${README_MD_FILE}
+		
+	printf '**SBAT**:\n```\n' >> ${README_MD_FILE}
+	objcopy -j .sbat -O binary "${OUT_DIR}/${name}" /dev/stdout >> ${README_MD_FILE}
+	printf '\n```\n\n' >> ${README_MD_FILE}
+	 
+	printf '**PE INFO**:\n```\n' >> ${README_MD_FILE}
+	objdump -p "${OUT_DIR}/${name}" | grep -v -E '^Entry|^The Data Directory|^PE File|^Virtual|^\s+reloc' | awk '{print} END { if(NR > 0) printf "\n" }' RS= >> ${README_MD_FILE}
+	printf '\n```\n\n' >> ${README_MD_FILE}
+done
+
 
 printf "\n\n" >> ${README_MD_FILE}
 
